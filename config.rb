@@ -66,7 +66,6 @@ module Config
         new
       else
         if @overrides.index(new[:override].to_sym).nil?
-          p @overrides, new[:override] + 'index not present'
           old
         else
           if old[:override].nil?
@@ -87,7 +86,6 @@ module Config
           next
         end
         param = parse_row(row)
-        # param[:override] unless param.nil?
         current_section.merge!(param) { |k, old, new|
           override_param old,new
         } unless param.nil?
