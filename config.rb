@@ -1,4 +1,3 @@
-# Patch Hash for properties for 'dot' access
 module Config
 
   class Boolean < Object
@@ -30,6 +29,27 @@ module Config
     def self.convert val
       match = ALLOWED_VALUES.match(val)
       match[:num].to_f unless match.nil?
+    end
+  end
+
+  class ConfigHash < Hash
+    def method_missing(key)
+      self[key]
+    end
+  end
+
+  class Params
+    def initialize(settings)
+      @raw_settings = settings
+      @settings = ConfigHash.new
+    end
+
+    def method_missing(key)
+      @raw_settings[key].each {|k,v|
+        @settings[key] = ConfigHash.new if @settings[key].nil?
+        @settings[key][k] = v[:value] unless v[:value].nil?
+      }
+      @settings[key]
     end
   end
 
@@ -80,9 +100,9 @@ module Config
     def load
       current_section = @settings
       File.open(@filename).each { |row|
-        match = row.match(/^\[(.+)\]$/)
+        match = row.match(/^\[(?<section>.+)\]$/)
         unless match.nil?
-          current_section = @settings[match[1]] = Hash.new
+          current_section = @settings[match[:section].to_sym] = Hash.new
           next
         end
         param = parse_row(row)
@@ -98,7 +118,8 @@ module Config
           /^\s*(?<name>.*?)(?:<(?<override>.*)>)?\s*=\s*(?<val>.*)\s*$/
       )
       unless match.nil?
-        value = match[:val].split(',').map {|v| convert_value v }
+        str = match[:val].match /^[“|"|'](?<string>.*)[”|"|']$/
+        value = str.nil? ? match[:val].split(',').map {|v| convert_value v } : str[:string]
         {
           match[:name].to_sym => {
             value: (value.length == 1) ? value[0] : value,
@@ -111,6 +132,5 @@ module Config
 end
 
 def load_config(filename, overrides=[])
-  config = File.exist?(filename) ? Config::Config.new(filename, overrides) : Hash.new
-  config.load filename
+  Config::Params.new Config::Config.new(filename, overrides).load
 end

@@ -8,32 +8,9 @@ describe Config do
   let(:config) { Config::Config.new(FILENAME, ['ubuntu', :production]) }
 
   it 'should load file values' do
-    p config.load['ftp'][:path]
-    # pending
-    # expect(config.any?).to be_truthy
+    config = load_config FILENAME, ['ubuntu', :production]
+    p config.ftp.name
   end
-
-  # describe 'hash access' do
-  #   it 'should return nil for nonexistent entry' do
-  #     expect(config.printers).to be_nil
-  #   end
-  #
-  #   it 'should return hash for existent entry' do
-  #     expect(config.common).to be_a_kind_of Hash
-  #   end
-  # end
-
-  # describe 'load_config' do
-  #   it 'should be a valid class' do
-  #     expect(config).to be_instance_of Hash
-  #   end
-  #
-  #   context 'file not found' do
-  #     it 'should handle error' do
-  #       expect(load_config 'nonexistent').to be_instance_of Hash
-  #     end
-  #   end
-  # end
 
   describe '.convert_value' do
     context 'boolean' do
