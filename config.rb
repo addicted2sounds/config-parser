@@ -61,8 +61,21 @@ module Config
       end
     end
 
-    def override_param(param, existing)
-
+    def override_param(old, new)
+      if new[:override].nil?
+        new
+      else
+        if @overrides.index(new[:override].to_sym).nil?
+          p @overrides, new[:override] + 'index not present'
+          old
+        else
+          if old[:override].nil?
+            new
+          else
+            (@overrides.index(new[:override].to_sym) > @overrides.index(old[:override].to_sym)) ? new : old
+          end
+        end
+      end
     end
 
     def load
@@ -76,20 +89,7 @@ module Config
         param = parse_row(row)
         # param[:override] unless param.nil?
         current_section.merge!(param) { |k, old, new|
-          if new[:override].nil?
-           new
-          else
-            if @overrides.index(new[:override].to_sym).nil?
-              p @overrides, new[:override] + 'index not present'
-              old
-            else
-              if old[:override].nil?
-                new
-              else
-                (@overrides.index(new[:override].to_sym) > @overrides.index(old[:override].to_sym)) ? new : old
-              end
-            end
-          end
+          override_param old,new
         } unless param.nil?
       }
       @settings
